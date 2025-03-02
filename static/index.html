@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .result { margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Plastic Waste Classifier API Test</h1>
+    <p>Upload an image to test the classification API:</p>
+    
+    <input type="file" id="imageInput" accept="image/*">
+    <button onclick="testAPI()">Test API</button>
+    
+    <div id="result" class="result" style="display: none;"></div>
+    
+    <script>
+        async function testAPI() {
+            const fileInput = document.getElementById('imageInput');
+            const resultDiv = document.getElementById('result');
+            
+            if (!fileInput.files.length) {
+                alert('Please select an image');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = async function(e) {
+                // Get base64 data
+                let base64Image = e.target.result.split(',')[1];
+                
+                try {
+                    // Call API
+                    const response = await fetch('/api/predict', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ image: base64Image })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    // Display result
+                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = `
+                        <h3>Result:</h3>
+                        <p>Prediction: ${data.prediction}</p>
+                        <p>Confidence: ${data.confidence.toFixed(2)}%</p>
+                    `;
+                } catch (error) {
+                    resultDiv.style.display = 'block';
+                    resultDiv.innerHTML = `<p>Error: ${error.message}</p>`;
+                }
+            };
+            
+            reader.readAsDataURL(file);
+        }
+    </script>
+</body>
+</html>
